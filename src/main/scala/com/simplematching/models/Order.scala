@@ -10,4 +10,6 @@ object Order {
       Order(client, action, equity, price.toLong, quantity.toInt)
   }
 }
-case class Order(client: String, action: Action, equity: Equity, price: Price, quantity: Quantity)
+case class Order(client: String, action: Action, equity: Equity, price: Price, size: Size) {
+  def totalPrice: Price = price * size
+}
