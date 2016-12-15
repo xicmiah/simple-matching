@@ -1,25 +1,33 @@
 package com.simplematching
 
-import java.nio.file.{Files, Paths}
+import com.simplematching.models.{Client, Order, Trade}
+import com.simplematching.processing.{ClientAccounts, OrderBooks}
 
-import com.simplematching.models.{Client, Order}
-
-import scala.collection.JavaConverters._
+import scala.collection.immutable.SortedMap
+import scala.io.Source
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val clients = Files.lines(Paths.get("clients.txt"))
-      .iterator().asScala
-      .map(line => Client.parseFromLine(line)
-        .getOrElse(throw new RuntimeException(s"Couldn't parse client from $line")))
-      .map(client => client.name -> client).toMap
+    val initial = ClientAccounts {
+      Source.fromFile("clients.txt").getLines()
+        .map(line => Client.parseFromLine(line)
+          .getOrElse(throw new RuntimeException(s"Couldn't parse client from $line")))
+        .map(client => client.name -> client)
+        .foldLeft(SortedMap.newBuilder[String, Client])(_ += _).result()
+    }
 
-    val orders = Files.lines(Paths.get("orders.txt"))
-      .iterator().asScala
+    val orders = Source.fromFile("orders.txt").getLines()
       .map(line => Order.parseFromLine(line)
         .getOrElse(throw new RuntimeException(s"Couldn't parse order from $line")))
 
-    println(clients.mkString("\n"))
-    println(orders.mkString("\n"))
+    val trades = orders
+      .scanLeft(OrderBooks() -> Seq.empty[Trade]) {
+        case ((books, _), order) => books.addOrderEmitTrades(order)
+      }.flatMap(_._2)
+
+    val resulting = trades.foldLeft(initial)(_ applyTrade _)
+
+    println(s"Before:\n${initial.clients.mkString("\n")}")
+    println(s"After:\n${resulting.clients.mkString("\n")}")
   }
 }
