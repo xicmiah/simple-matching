@@ -10,4 +10,4 @@ object Order {
       Order(client, action, equity, price.toLong, quantity.toInt)
   }
 }
-case class Order(client: String, action: Action, equity: Equity, price: Money, quantity: Quantity)
+case class Order(client: String, action: Action, equity: Equity, price: Price, quantity: Quantity)
