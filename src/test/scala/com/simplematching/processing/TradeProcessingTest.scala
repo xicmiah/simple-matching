@@ -3,14 +3,8 @@ package com.simplematching.processing
 import com.simplematching.models._
 import org.scalacheck._
 
-import scala.collection.immutable.SortedMap
-
 object TradeProcessingTest extends Properties("Clients") {
   private def equities = ClientGenerator.equities
-
-  val genAccounts: Gen[ClientAccounts] = for {
-    clients <- Gen.nonEmptyContainerOf[Seq, Client](ClientGenerator.genClient)
-  } yield ClientAccounts(SortedMap(clients.map(c => c.name -> c):_*))
 
   private def genTrade(buyer: String, seller: String): Gen[Trade] = for {
     equity <- Gen.oneOf(equities)
@@ -19,14 +13,14 @@ object TradeProcessingTest extends Properties("Clients") {
   } yield Trade(buyer, seller, equity, price, quantity)
 
   val genTradeUpdate: Gen[(ClientAccounts, Trade, ClientAccounts)] = for {
-    accounts <- genAccounts
+    accounts <- ClientGenerator.genAccounts
     clientNames = accounts.clients.keySet.toSeq
     buyer <- Gen.oneOf(clientNames)
     seller <- Gen.oneOf(clientNames)
     trade <- genTrade(buyer, seller)
   } yield (accounts, trade, accounts.applyTrade(trade))
 
-  val genNonSelfTradeUpdate = genTradeUpdate.suchThat {
+  val genNonSelfTradeUpdate: Gen[(ClientAccounts, Trade, ClientAccounts)] = genTradeUpdate.suchThat {
     case (_, trade, _) => trade.buyer != trade.seller
   }
 
@@ -54,14 +48,11 @@ object TradeProcessingTest extends Properties("Clients") {
 
   property("balanceZeroSum") = Prop.forAll(genTradeUpdate) {
     case (old, _, updated) =>
-      old.clients.values.map(_.balance).sum == updated.clients.values.map(_.balance).sum
+      ClientStats.totalBalance(old) == ClientStats.totalBalance(updated)
   }
 
   property("assetsZeroSum") = Prop.forAll(genTradeUpdate) {
     case (old, _, updated) =>
-      def totalAssets(clients: ClientAccounts): Map[Equity, Size] = {
-        equities.map(equity => equity -> old.clients.values.flatMap(c => c.assets.get(equity)).sum).toMap
-      }
-      totalAssets(old) == totalAssets(updated)
+      ClientStats.totalAssets(old) == ClientStats.totalAssets(updated)
   }
 }
