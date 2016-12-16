@@ -18,22 +18,47 @@ object TradeProcessingTest extends Properties("Clients") {
     quantity <- Gen.posNum[Size]
   } yield Trade(buyer, seller, equity, price, quantity)
 
-  val genTradeUpdate: Gen[(ClientAccounts, ClientAccounts)] = for {
+  val genTradeUpdate: Gen[(ClientAccounts, Trade, ClientAccounts)] = for {
     accounts <- genAccounts
     clientNames = accounts.clients.keySet.toSeq
     buyer <- Gen.oneOf(clientNames)
     seller <- Gen.oneOf(clientNames)
     trade <- genTrade(buyer, seller)
-  } yield accounts -> accounts.applyTrade(trade)
+  } yield (accounts, trade, accounts.applyTrade(trade))
 
+  val genNonSelfTradeUpdate = genTradeUpdate.suchThat {
+    case (_, trade, _) => trade.buyer != trade.seller
+  }
+
+  property("decreasesBuyerBalance") = Prop.forAll(genNonSelfTradeUpdate) {
+    case (old, trade, updated) =>
+      old.clients(trade.buyer).balance == updated.clients(trade.buyer).balance + trade.sum
+  }
+
+  property("increasesSellerBalance") = Prop.forAll(genNonSelfTradeUpdate) {
+    case (old, trade, updated) =>
+      old.clients(trade.seller).balance + trade.sum == updated.clients(trade.seller).balance
+  }
+
+  property("increasesBuyerAssets") = Prop.forAll(genNonSelfTradeUpdate) {
+    case (old, trade, updated) =>
+      def assetValue(accounts: ClientAccounts) = accounts.clients(trade.buyer).assets(trade.equity)
+      assetValue(old) + trade.size == assetValue(updated)
+  }
+
+  property("decreasesSellerAssets") = Prop.forAll(genNonSelfTradeUpdate) {
+    case (old, trade, updated) =>
+      def assetValue(accounts: ClientAccounts) = accounts.clients(trade.seller).assets(trade.equity)
+      assetValue(old) == assetValue(updated) + trade.size
+  }
 
   property("balanceZeroSum") = Prop.forAll(genTradeUpdate) {
-    case (old, updated) =>
+    case (old, _, updated) =>
       old.clients.values.map(_.balance).sum == updated.clients.values.map(_.balance).sum
   }
 
   property("assetsZeroSum") = Prop.forAll(genTradeUpdate) {
-    case (old, updated) =>
+    case (old, _, updated) =>
       def totalAssets(clients: ClientAccounts): Map[Equity, Size] = {
         equities.map(equity => equity -> old.clients.values.flatMap(c => c.assets.get(equity)).sum).toMap
       }
