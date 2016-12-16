@@ -29,4 +29,6 @@ case class Client(name: String, balance: Money, assets: Map[Equity, Size]) {
     val newQuantity = quantity + equityChange
     assets.updated(equity, newQuantity)
   }
+
+  def toTsvLine = s"$name\t$balance\t${assets("A")}\t${assets("B")}\t${assets("C")}\t${assets("D")}"
 }

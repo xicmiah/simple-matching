@@ -6,16 +6,10 @@ import org.scalacheck._
 import scala.collection.immutable.SortedMap
 
 object TradeProcessingTest extends Properties("Clients") {
-  val equities = Seq("A", "B", "C", "D")
-
-  val genClient: Gen[Client] = for {
-    name <- Gen.alphaNumStr
-    balance <- Gen.posNum[Money]
-    assets <- Gen.containerOfN[Seq, Size](equities.size, Gen.posNum[Size]).map(equities.zip(_).toMap)
-  } yield Client(name, balance, assets)
+  private def equities = ClientGenerator.equities
 
   val genAccounts: Gen[ClientAccounts] = for {
-    clients <- Gen.nonEmptyContainerOf[Seq, Client](genClient)
+    clients <- Gen.nonEmptyContainerOf[Seq, Client](ClientGenerator.genClient)
   } yield ClientAccounts(SortedMap(clients.map(c => c.name -> c):_*))
 
   private def genTrade(buyer: String, seller: String): Gen[Trade] = for {
@@ -33,12 +27,12 @@ object TradeProcessingTest extends Properties("Clients") {
   } yield accounts -> accounts.applyTrade(trade)
 
 
-  property("balance zero sum") = Prop.forAll(genTradeUpdate) {
+  property("balanceZeroSum") = Prop.forAll(genTradeUpdate) {
     case (old, updated) =>
       old.clients.values.map(_.balance).sum == updated.clients.values.map(_.balance).sum
   }
 
-  property("assets zero sum") = Prop.forAll(genTradeUpdate) {
+  property("assetsZeroSum") = Prop.forAll(genTradeUpdate) {
     case (old, updated) =>
       def totalAssets(clients: ClientAccounts): Map[Equity, Size] = {
         equities.map(equity => equity -> old.clients.values.flatMap(c => c.assets.get(equity)).sum).toMap

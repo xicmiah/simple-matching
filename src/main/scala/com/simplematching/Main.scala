@@ -1,8 +1,11 @@
 package com.simplematching
 
+import java.nio.file.{Files, Paths}
+
 import com.simplematching.models.{Client, Order, Trade}
 import com.simplematching.processing.{ClientAccounts, OrderBooks}
 
+import scala.collection.JavaConverters._
 import scala.collection.immutable.SortedMap
 import scala.io.Source
 
@@ -27,7 +30,8 @@ object Main {
 
     val resulting = trades.foldLeft(initial)(_ applyTrade _)
 
-    println(s"Before:\n${initial.clients.mkString("\n")}")
-    println(s"After:\n${resulting.clients.mkString("\n")}")
+    Files.write(Paths.get("result.txt"), resulting.clients.values.map(_.toTsvLine).asJava)
+
+    Source.fromFile("result.txt").getLines().foreach(println)
   }
 }
