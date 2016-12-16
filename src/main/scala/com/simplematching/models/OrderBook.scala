@@ -42,6 +42,7 @@ case class OrderBook(bids: Side, asks: Side) {
     val orders = side.getOrElse(key, Vector.empty)
     val (l, r) = orders.span(_ != order)
     val newValue = l ++ r.drop(1)
-    side.updated(key, newValue)
+
+    if (newValue.isEmpty) side - key else side.updated(key, newValue)
   }
 }

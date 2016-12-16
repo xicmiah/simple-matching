@@ -12,14 +12,6 @@ object Client {
   }
 }
 case class Client(name: String, balance: Money, assets: Map[Equity, Size]) {
-  def applyTrade(trade: Trade): Client = {
-    if (trade.buyer == name) {
-      copy(balance = balance - trade.sum, assets = updateAssets(trade.equity, trade.size))
-    } else if (trade.seller == name) {
-      copy(balance = balance + trade.sum, assets = updateAssets(trade.equity, -trade.size))
-    } else this
-  }
-
   def applyChange(balanceChange: Money, equity: Equity, equityChange: Size): Client = {
     copy(balance = balance + balanceChange, assets = updateAssets(equity, equityChange))
   }
