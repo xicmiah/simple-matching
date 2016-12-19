@@ -1,10 +1,16 @@
 package com.simplematching.models
 
 object Trade {
-  def fromMatchingOrders(buyOrder: Order, sellOrder: Order): Trade = {
+  def fromMatchingOrders(first: Order, second: Order): Trade = {
+    first.action -> second.action match {
+      case (Action.Buy, Action.Sell) => fromBuySell(first, second)
+      case (Action.Sell, Action.Buy) => fromBuySell(second, first)
+      case _ => throw new RuntimeException(s"Cannot create trade from two orders on same side: $first $second")
+    }
+  }
+
+  private def fromBuySell(buyOrder: Order, sellOrder: Order): Trade = {
     require(buyOrder.equity == sellOrder.equity)
-    require(buyOrder.action == Action.Buy)
-    require(sellOrder.action == Action.Sell)
 
     require(buyOrder.price == sellOrder.price)
     require(buyOrder.size == sellOrder.size)
