@@ -37,12 +37,14 @@ object TradeProcessingTest extends Properties("Clients") {
   property("increasesBuyerAssets") = Prop.forAll(genNonSelfTradeUpdate) {
     case (old, trade, updated) =>
       def assetValue(accounts: ClientAccounts) = accounts.clients(trade.buyer).assets(trade.equity)
+
       assetValue(old) + trade.size == assetValue(updated)
   }
 
   property("decreasesSellerAssets") = Prop.forAll(genNonSelfTradeUpdate) {
     case (old, trade, updated) =>
       def assetValue(accounts: ClientAccounts) = accounts.clients(trade.seller).assets(trade.equity)
+
       assetValue(old) == assetValue(updated) + trade.size
   }
 

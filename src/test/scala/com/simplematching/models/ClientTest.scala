@@ -1,4 +1,5 @@
 package com.simplematching.models
+
 import utest._
 
 object ClientTest extends utest.TestSuite {

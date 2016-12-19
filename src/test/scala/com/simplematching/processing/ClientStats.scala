@@ -12,5 +12,4 @@ object ClientStats {
       equity -> accounts.clients.values.flatMap(c => c.assets.get(equity)).sum
     }.toMap
   }
-
 }

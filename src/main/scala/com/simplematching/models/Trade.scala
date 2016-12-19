@@ -12,7 +12,9 @@ object Trade {
     Trade(buyOrder.client, sellOrder.client, buyOrder.equity, buyOrder.price, buyOrder.size)
   }
 }
+
 case class Trade(buyer: String, seller: String, equity: Equity, price: Price, size: Size) {
   def affectedClients = Set(buyer, seller)
+
   def sum: Money = price * size
 }

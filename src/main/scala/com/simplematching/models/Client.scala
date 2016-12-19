@@ -11,6 +11,7 @@ object Client {
       Client(name, balance.toLong, assets)
   }
 }
+
 case class Client(name: String, balance: Money, assets: Map[Equity, Size]) {
   def applyChange(balanceChange: Money, equity: Equity, equityChange: Size): Client = {
     copy(balance = balance + balanceChange, assets = updateAssets(equity, equityChange))

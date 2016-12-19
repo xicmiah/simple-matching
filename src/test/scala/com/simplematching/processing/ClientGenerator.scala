@@ -16,5 +16,5 @@ object ClientGenerator {
 
   val genAccounts: Gen[ClientAccounts] = for {
     clients <- Gen.nonEmptyContainerOf[Seq, Client](ClientGenerator.genClient)
-  } yield ClientAccounts(SortedMap(clients.map(c => c.name -> c):_*))
+  } yield ClientAccounts(SortedMap(clients.map(c => c.name -> c): _*))
 }

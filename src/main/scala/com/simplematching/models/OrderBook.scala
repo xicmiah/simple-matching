@@ -9,6 +9,7 @@ object OrderBook {
 
   val empty = OrderBook(SortedMap.empty, SortedMap.empty)
 }
+
 case class OrderBook(bids: Side, asks: Side) {
   def addOrder(order: Order): OrderBook = {
     order.action match {
