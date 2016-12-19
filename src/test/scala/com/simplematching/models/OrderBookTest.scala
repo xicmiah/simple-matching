@@ -10,35 +10,26 @@ object OrderBookTest extends TestSuite {
     val empty = OrderBook.empty
     "adds buy orders to bids" - {
       val order = genOrder(Buy, 10, 1)
-      val updated = empty.addOrder(order)
+      val (updated, trades) = empty.addOrderAndMatch(order)
       assert(updated.bids.values.flatten.toSeq.contains(order))
+      assert(trades.isEmpty)
     }
 
     "adds sell orders to asks" - {
       val order = genOrder(Sell, 10, 1)
-      val updated = empty.addOrder(order)
+      val (updated, trades) = empty.addOrderAndMatch(order)
       assert(updated.asks.values.flatten.toSeq.contains(order))
+      assert(trades.isEmpty)
     }
 
-    "with same price/size buy+sell orders" - {
-      val buyOrder = genOrder(Buy, 10, 5)
-      val unmatched = genOrder(Sell, 5, 9)
-      val filled = empty
-        .addOrder(buyOrder)
-        .addOrder(buyOrder.copy(action = Sell))
-        .addOrder(unmatched)
+    "returns matches" - {
+      val buy = genOrder(Buy, 10, 1)
+      val sell = genOrder(Sell, 10, 1).copy(client = "C2")
+      val (book, _) = empty.addOrderAndMatch(sell)
 
-      "has trades" - {
-        val trades = filled.possibleTrades
-        assert(
-          trades.size == 1,
-          trades.head == Trade("C1", "C1", "A", 10, 5))
-      }
-
-      "removes orders by trade" - {
-        val afterMatching = filled.removeMatchedOrders(filled.possibleTrades.head)
-        assert(afterMatching == empty.addOrder(unmatched))
-      }
+      val (result, trades) = book.addOrderAndMatch(buy)
+      assert(trades == Seq(Trade("C1", "C2", "A", 10, 1)))
+      assert(result == empty)
     }
   }
 }

@@ -8,7 +8,7 @@ object ClientStats {
   }
 
   def totalAssets(accounts: ClientAccounts): Map[Equity, Size] = {
-    ClientGenerator.equities.map { equity =>
+    Generators.equities.map { equity =>
       equity -> accounts.clients.values.flatMap(c => c.assets.get(equity)).sum
     }.toMap
   }

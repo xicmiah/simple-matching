@@ -4,7 +4,7 @@ import com.simplematching.models._
 import org.scalacheck._
 
 object TradeProcessingTest extends Properties("Clients") {
-  private def equities = ClientGenerator.equities
+  private def equities = Generators.equities
 
   private def genTrade(buyer: String, seller: String): Gen[Trade] = for {
     equity <- Gen.oneOf(equities)
@@ -13,7 +13,7 @@ object TradeProcessingTest extends Properties("Clients") {
   } yield Trade(buyer, seller, equity, price, quantity)
 
   val genTradeUpdate: Gen[(ClientAccounts, Trade, ClientAccounts)] = for {
-    accounts <- ClientGenerator.genAccounts
+    accounts <- Generators.genAccounts
     clientNames = accounts.clients.keySet.toSeq
     buyer <- Gen.oneOf(clientNames)
     seller <- Gen.oneOf(clientNames)

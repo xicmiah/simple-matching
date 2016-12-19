@@ -4,19 +4,9 @@ import com.simplematching.models._
 import org.scalacheck._
 
 class ZeroSumTest extends Properties("ZeroSum") {
-  private def genOrder(genClient: Gen[String]): Gen[Order] = {
-    for {
-      client <- genClient
-      action <- Gen.oneOf(Action.Buy, Action.Sell)
-      equity <- Gen.oneOf(ClientGenerator.equities)
-      price <- Gen.posNum[Price]
-      size <- Gen.posNum[Size]
-    } yield Order(client, action, equity, price, size)
-  }
-
   val genEvents: Gen[(ClientAccounts, Seq[Order])] = for {
-    initialAccounts <- ClientGenerator.genAccounts
-    orders <- Gen.containerOfN[Seq, Order](1000, genOrder(Gen.oneOf(initialAccounts.clients.keys.toSeq)))
+    initialAccounts <- Generators.genAccounts
+    orders <- Gen.containerOfN[Seq, Order](1000, Generators.genOrder(Gen.oneOf(initialAccounts.clients.keys.toSeq)))
     if hasTrades(initialAccounts, orders)
   } yield initialAccounts -> orders
 
